@@ -231,3 +231,451 @@ a {
         grid-template-columns: 1fr;
     }
 }
+/* --- HERO SECTION (Этап 3.1) --- */
+.hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 120px 0 80px;
+    overflow: hidden;
+}
+
+.hero__canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    /* Фон позади контента */
+    opacity: 0.6;
+    /* Чуть приглушаем для читаемости текста */
+}
+
+.hero__container {
+    position: relative;
+    z-index: 2;
+    /* Контент поверх фона */
+    pointer-events: none;
+    /* Чтобы клики проходили сквозь контейнер к канвасу, если нужно */
+}
+
+.hero__content {
+    max-width: 700px;
+    pointer-events: auto;
+    /* Возвращаем клики контенту */
+}
+
+.hero__title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1.1;
+    margin-bottom: 24px;
+    /* Изначально скрываем текст, чтобы JS его "напечатал" */
+    visibility: hidden;
+}
+
+.text-accent {
+    color: var(--primary);
+    /* Добавим градиент для акцента */
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero__subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    max-width: 600px;
+    opacity: 0;
+    /* Для анимации появления */
+    transform: translateY(20px);
+}
+
+.hero__actions {
+    display: flex;
+    gap: 16px;
+    opacity: 0;
+    /* Для анимации появления */
+    transform: translateY(20px);
+}
+
+/* Кнопки Hero */
+.btn--primary {
+    background: var(--primary);
+    color: var(--white);
+    border: 1px solid var(--primary);
+}
+
+.btn--primary:hover {
+    background: transparent;
+    color: var(--primary);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+}
+
+.btn--secondary {
+    background: transparent;
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn--secondary:hover {
+    border-color: var(--white);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Scroll Down Indicator */
+.scroll-down {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 50px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50px;
+    display: flex;
+    justify-content: center;
+    z-index: 2;
+    opacity: 0.6;
+}
+
+.scroll-down span {
+    width: 4px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 2px;
+    margin-top: 10px;
+    animation: scrollMover 2s infinite;
+}
+
+@keyframes scrollMover {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+}
+
+/* Mobile Hero */
+@media (max-width: 768px) {
+    .hero__actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .scroll-down {
+        display: none;
+    }
+}
+/* --- ABOUT SECTION (Этап 3.2) --- */
+.about {
+    padding: 120px 0;
+    position: relative;
+    background: linear-gradient(to bottom, var(--bg-dark), #0f111a);
+}
+
+.about__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+}
+
+/* Терминал */
+.about__visual {
+    position: relative;
+}
+
+.terminal {
+    background: #050505;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    font-family: 'Courier New', Courier, monospace;
+    position: relative;
+    z-index: 2;
+}
+
+.terminal__header {
+    background: #1a1a1a;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.terminal__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.terminal__dot:nth-child(1) {
+    background: #ff5f56;
+}
+
+.terminal__dot:nth-child(2) {
+    background: #ffbd2e;
+}
+
+.terminal__dot:nth-child(3) {
+    background: #27c93f;
+}
+
+.terminal__title {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-left: 10px;
+}
+
+.terminal__body {
+    padding: 25px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #f8f8f2;
+}
+
+/* Цвета кода */
+.t-purple {
+    color: #bd93f9;
+}
+
+.t-green {
+    color: #50fa7b;
+}
+
+.t-blue {
+    color: #8be9fd;
+}
+
+.t-gray {
+    color: #6272a4;
+}
+
+.t-orange {
+    color: #ffb86c;
+}
+
+.terminal__cursor {
+    display: inline-block;
+    width: 8px;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.about__glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    filter: blur(40px);
+    z-index: 1;
+}
+
+/* Контент */
+.about__title {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    line-height: 1.2;
+}
+
+.about__text {
+    color: var(--text-muted);
+    margin-bottom: 25px;
+    font-size: 1.1rem;
+}
+
+.about__text strong {
+    color: var(--white);
+    font-weight: 600;
+}
+
+.about__stats {
+    display: flex;
+    gap: 40px;
+    margin: 40px 0;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-item__num {
+    font-size: 1.8rem;
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.stat-item__label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.btn--outline {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn--outline:hover {
+    background: var(--primary);
+    color: var(--white);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+}
+
+/* Адаптив */
+@media (max-width: 992px) {
+    .about__grid {
+        grid-template-columns: 1fr;
+        gap: 50px;
+    }
+
+    .about__visual {
+        order: 2;
+    }
+
+    .about__content {
+        order: 1;
+    }
+}
+/* --- BENEFITS SECTION (Этап 3.3) --- */
+.benefits {
+    padding: 100px 0;
+    background: var(--bg-dark);
+}
+
+.benefits__header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 60px;
+}
+
+.benefits__title {
+    font-size: 2.8rem;
+    margin-bottom: 20px;
+}
+
+.benefits__subtitle {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+}
+
+.benefits__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.benefit-card {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 1px;
+    /* Для эффекта границы через внутренний отступ */
+    overflow: hidden;
+    height: 100%;
+    transition: var(--transition);
+}
+
+.benefit-card__inner {
+    position: relative;
+    z-index: 2;
+    background: #11131c;
+    border-radius: 15px;
+    padding: 40px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.benefit-card__icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+    color: var(--primary);
+    font-size: 1.5rem;
+    transition: var(--transition);
+}
+
+.benefit-card:hover .benefit-card__icon {
+    background: var(--primary);
+    color: var(--white);
+    transform: scale(1.1) rotate(5deg);
+}
+
+.benefit-card__title {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: var(--white);
+}
+
+.benefit-card__text {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Spotlight эффект */
+.benefit-card__glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: radial-gradient(600px circle at var(--mouse-x, 0) var(--mouse-y, 0),
+            rgba(59, 130, 246, 0.15),
+            transparent 40%);
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.benefit-card:hover .benefit-card__glow {
+    opacity: 1;
+}
+
+/* Адаптив */
+@media (max-width: 992px) {
+    .benefits__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .benefits__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .benefits__title {
+        font-size: 2rem;
+    }
+}
