@@ -1,22 +1,34 @@
+/**
+ * Alpha Stream - IT School Project
+ * Full Interactive Logic 2026
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- 0. GLOBAL SETUP ---
+    // --- 1. ИНИЦИАЛИЗАЦИЯ ПЛАГИНОВ ---
     gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
-    // Smooth Scroll (Lenis)
+    // Плавный скролл (Lenis)
     const lenis = new Lenis({
         duration: 1.2,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smooth: true
+        smoothWheel: true,
+        orientation: 'vertical',
     });
+
     function raf(time) {
         lenis.raf(time);
         requestAnimationFrame(raf);
     }
     requestAnimationFrame(raf);
 
-    // Header Scroll Effect
+    // --- 2. НАВИГАЦИЯ И МОБИЛЬНОЕ МЕНЮ ---
     const header = document.querySelector('.header');
+    const menuToggle = document.querySelector('.menu-toggle');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const mobileLinks = document.querySelectorAll('.mobile-nav__link');
+
+    // Липкий хедер при скролле
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) {
             header.classList.add('header--scrolled');
@@ -25,246 +37,253 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Переключение мобильного меню
+    const toggleMenu = () => {
+        menuToggle.classList.toggle('menu-toggle--active');
+        mobileMenu.classList.toggle('mobile-menu--active');
+        // Блокируем скролл при открытом меню
+        document.body.style.overflow = mobileMenu.classList.contains('mobile-menu--active') ? 'hidden' : '';
+    };
 
-    // --- 1. HERO SECTION ANIMATION ---
-
-    // 1.1 GSAP Content Reveal & Text Scramble
-    const heroTl = gsap.timeline({ defaults: { ease: "power3.out" } });
-    const scrambleText = document.querySelector('.scramble-text');
-    const finalHeadline = scrambleText.innerHTML; // Сохраняем финальный HTML с вложенным спаном
-
-    gsap.set(scrambleText, { visibility: 'visible' });
-
-    heroTl
-        // Эффект "взлома" текста. Используем delimiter: " " чтобы не ломать HTML теги внутри
-        .to(scrambleText, {
-            duration: 2.5,
-            text: {
-                value: finalHeadline,
-                delimiter: "", // Scramble по буквам
-                scrambleText: {
-                    text: finalHeadline,
-                    chars: "01_X$#@!-[]░▒▓█", // Хакерские символы
-                    revealDelay: 0.5,
-                    speed: 0.3,
-                }
-            },
-        })
-        // Появление подзаголовка и кнопок
-        .to(['.hero__subtitle', '.hero__actions'], {
-            y: 0,
-            opacity: 1,
-            duration: 1,
-            stagger: 0.2
-        }, "-=1.5"); // Начинаем чуть раньше окончания скрамбла
+    menuToggle.addEventListener('click', toggleMenu);
+    mobileLinks.forEach(link => link.addEventListener('click', toggleMenu));
 
 
-    // 1.2 Three.js Interactive Grid Background
-    function initThreeJsBackground() {
+    // --- 3. HERO: ТЕХНОЛОГИЧНЫЙ 3D ФОН (Three.js) ---
+    const initHero3D = () => {
         const canvas = document.querySelector('#hero-canvas');
-        if (!canvas) return;
+        if (!canvas || window.innerWidth < 768) return;
 
         const scene = new THREE.Scene();
-        // Темно-синий туман для глубины
-        scene.fog = new THREE.FogExp2(0x0a0b10, 0.0015); 
+        scene.fog = new THREE.FogExp2(0x0a0b10, 0.0012);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 400;
+        camera.position.z = 450;
 
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        // --- Particles & Lines Geometry ---
-        const particleCount = 150; // Количество точек
-        const particles = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const originalPositions = new Float32Array(particleCount * 3); // Для возврата в исходное положение
+        // Геометрия частиц
+        const count = 160;
+        const posArray = new Float32Array(count * 3);
+        const originalPos = new Float32Array(count * 3);
 
-        // Генерация случайных позиций в объеме
-        for (let i = 0; i < particleCount * 3; i += 3) {
-            const x = Math.random() * 800 - 400;
-            const y = Math.random() * 800 - 400;
-            const z = Math.random() * 800 - 400;
-            positions[i] = x;
-            positions[i + 1] = y;
-            positions[i + 2] = z;
-            originalPositions[i] = x;
-            originalPositions[i + 1] = y;
-            originalPositions[i + 2] = z;
+        for (let i = 0; i < count * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 900;
+            originalPos[i] = posArray[i];
         }
-        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-        // Материал для точек
-        const particleMaterial = new THREE.PointsMaterial({
-            color: 0x3b82f6, // Primary blue
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const material = new THREE.PointsMaterial({
+            color: 0x3b82f6,
             size: 4,
             transparent: true,
-            opacity: 0.8,
+            opacity: 0.9,
             blending: THREE.AdditiveBlending
         });
-        const particleSystem = new THREE.Points(particles, particleMaterial);
-        scene.add(particleSystem);
 
-        // Материал для линий
-        const lineMaterial = new THREE.LineBasicMaterial({
-            color: 0x10b981, // Accent emerald
-            transparent: true,
-            opacity: 0.15
-        });
-        // Геометрия линий (будет обновляться в цикле)
-        const lineGeometry = new THREE.BufferGeometry();
-        const linePositions = new Float32Array(particleCount * particleCount * 3); // Макс. кол-во связей
-        lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-        const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+        const points = new THREE.Points(geometry, material);
+        scene.add(points);
+
+        // Линии связи
+        const lineMat = new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.12 });
+        const lineGeom = new THREE.BufferGeometry();
+        const linePositions = new Float32Array(count * count * 3);
+        lineGeom.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+        const lines = new THREE.LineSegments(lineGeom, lineMat);
         scene.add(lines);
 
-
-        // --- Mouse Interaction ---
-        let mouseX = 0;
-        let mouseY = 0;
-        let targetX = 0;
-        let targetY = 0;
-        const windowHalfX = window.innerWidth / 2;
-        const windowHalfY = window.innerHeight / 2;
-
-        document.addEventListener('mousemove', (event) => {
-            mouseX = (event.clientX - windowHalfX);
-            mouseY = (event.clientY - windowHalfY);
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2) * 0.15;
+            mouseY = (e.clientY - window.innerHeight / 2) * 0.15;
         });
 
-        // --- Animation Loop ---
         function animate() {
             requestAnimationFrame(animate);
-
-            targetX = mouseX * 0.001;
-            targetY = mouseY * 0.001;
-
-            // Легкое вращение всей системы от мыши
-            particleSystem.rotation.y += 0.002 + (targetX - particleSystem.rotation.y) * 0.05;
-            particleSystem.rotation.x += (targetY - particleSystem.rotation.x) * 0.05;
-            lines.rotation.copy(particleSystem.rotation);
-
-            const positions = particleSystem.geometry.attributes.position.array;
-            const linePositions = lines.geometry.attributes.position.array;
-            let lineIndex = 0;
-            let connections = 0;
             
-            // Обновление позиций точек (волновой эффект)
-            for (let i = 0; i < particleCount; i++) {
-                const i3 = i * 3;
-                // Небольшое движение "дыхания"
-                positions[i3 + 1] = originalPositions[i3 + 1] + Math.sin((Date.now() * 0.001 + originalPositions[i3] * 0.01)) * 20;
-                
-                // Создание связей между близкими точками
-                for (let j = i + 1; j < particleCount; j++) {
-                    const j3 = j * 3;
-                    const dx = positions[i3] - positions[j3];
-                    const dy = positions[i3 + 1] - positions[j3 + 1];
-                    const dz = positions[i3 + 2] - positions[j3 + 2];
-                    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            points.rotation.y += 0.0008;
+            points.position.x += (mouseX - points.position.x) * 0.05;
+            points.position.y += (-mouseY - points.position.y) * 0.05;
+            lines.position.copy(points.position);
+            lines.rotation.copy(points.rotation);
 
-                    if (dist < 120) { // Дистанция соединения
-                        linePositions[lineIndex++] = positions[i3];
-                        linePositions[lineIndex++] = positions[i3 + 1];
-                        linePositions[lineIndex++] = positions[i3 + 2];
-                        linePositions[lineIndex++] = positions[j3];
-                        linePositions[lineIndex++] = positions[j3 + 1];
-                        linePositions[lineIndex++] = positions[j3 + 2];
-                        connections++;
+            const pos = points.geometry.attributes.position.array;
+            const lPos = lines.geometry.attributes.position.array;
+            let counter = 0, connect = 0;
+
+            for (let i = 0; i < count; i++) {
+                const i3 = i * 3;
+                // Эффект "дыхания" точек
+                pos[i3 + 1] = originalPos[i3 + 1] + Math.sin(Date.now() * 0.001 + originalPos[i3]) * 15;
+
+                for (let j = i + 1; j < count; j++) {
+                    const j3 = j * 3;
+                    const d = Math.sqrt(Math.pow(pos[i3]-pos[j3], 2) + Math.pow(pos[i3+1]-pos[j3+1], 2));
+                    if (d < 120) {
+                        lPos[counter++] = pos[i3]; lPos[counter++] = pos[i3+1]; lPos[counter++] = pos[i3+2];
+                        lPos[counter++] = pos[j3]; lPos[counter++] = pos[j3+1]; lPos[counter++] = pos[j3+2];
+                        connect++;
                     }
                 }
             }
-            
-            particleSystem.geometry.attributes.position.needsUpdate = true;
-            lines.geometry.setDrawRange(0, connections * 2);
+            points.geometry.attributes.position.needsUpdate = true;
+            lines.geometry.setDrawRange(0, connect * 2);
             lines.geometry.attributes.position.needsUpdate = true;
-
             renderer.render(scene, camera);
         }
+        animate();
 
-        // --- Resize Handler ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+    };
+    initHero3D();
 
-        animate();
-    }
 
-    // Запуск Three.js только на десктопах для производительности, или упростить для мобильных
-    if (window.innerWidth > 768) {
-       initThreeJsBackground();
-    } else {
-        // Фоллбэк для мобильных (можно заменить на статичную картинку в CSS)
-        document.querySelector('#hero-canvas').style.background = 'radial-gradient(circle at center, #141620 0%, #0a0b10 70%)';
-    }
-
-   // --- 2. UNIVERSAL SCRAMBLE FOR ALL SECTIONS ---
-    // Ищем все элементы .scramble-text, КРОМЕ уже анимированного в Hero
-    const otherScrambleTexts = document.querySelectorAll('.scramble-text:not(.hero__title)');
-
-    otherScrambleTexts.forEach(textElement => {
-        const finalContent = textElement.innerHTML;
-        
-        // Скрываем текст до начала анимации
-        gsap.set(textElement, { opacity: 0 });
-
-        ScrollTrigger.create({
-            trigger: textElement,
-            start: "top 85%", // Запуск, когда заголовок внизу экрана
-            onEnter: () => {
-                gsap.set(textElement, { opacity: 1 });
-                gsap.to(textElement, {
-                    duration: 1.5,
-                    text: {
-                        value: finalContent,
-                        delimiter: "",
-                        scrambleText: {
-                            text: finalContent,
-                            chars: "01_X$#@!-[]░▒▓█",
-                            revealDelay: 0.2,
-                            speed: 0.4,
-                        }
-                    }
-                });
+    // --- 4. ЭФФЕКТ "ХАКЕРСКОГО" ТЕКСТА (Scramble) ---
+    const scrambleAnimation = (target) => {
+        const text = target.innerHTML;
+        gsap.to(target, {
+            duration: 1.8,
+            visibility: 'visible',
+            text: {
+                value: text,
+                scrambleText: { 
+                    text: text, 
+                    chars: "01_X$#@!", 
+                    revealDelay: 0.4, 
+                    speed: 0.3 
+                }
             }
         });
-    });
+    };
 
-    // Анимация терминала (легкое парение)
-    gsap.to('.terminal', {
-        y: -15,
-        duration: 3,
-        repeat: -1,
-        yoyo: true,
-        ease: "power1.inOut"
-    });
-    // --- 3. BENEFITS SPOTLIGHT EFFECT ---
-    const cards = document.querySelectorAll('.benefit-card');
-    
-    cards.forEach(card => {
-        card.addEventListener('mousemove', e => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+    // Для Hero (сразу после загрузки)
+    const h1 = document.querySelector('.hero__title');
+    if (h1) {
+        gsap.set(h1, { visibility: 'hidden' });
+        setTimeout(() => scrambleAnimation(h1), 400);
+        gsap.to(['.hero__subtitle', '.hero__actions'], { opacity: 1, y: 0, stagger: 0.2, delay: 1.2 });
+    }
 
-            card.style.setProperty('--mouse-x', `${x}px`);
-            card.style.setProperty('--mouse-y', `${y}px`);
+    // Для всех остальных заголовков (при появлении)
+    document.querySelectorAll('.scramble-text:not(.hero__title)').forEach(title => {
+        ScrollTrigger.create({
+            trigger: title,
+            start: "top 85%",
+            onEnter: () => scrambleAnimation(title)
         });
     });
 
-    // Анимация появления карточек (Stagger)
-    gsap.from('.benefit-card', {
-        scrollTrigger: {
-            trigger: '.benefits__grid',
-            start: 'top 80%'
-        },
-        y: 50,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: "power2.out"
+
+    // --- 5. КОНТАКТНАЯ ФОРМА: ВАЛИДАЦИЯ И УСПЕХ ---
+    const contactForm = document.getElementById('contact-form');
+    const phoneField = document.getElementById('phone-input');
+    const captchaLabel = document.getElementById('captcha-question');
+    const captchaField = document.getElementById('captcha-answer');
+    const successBox = document.getElementById('form-success');
+
+    // Генерация капчи
+    let val1 = Math.floor(Math.random() * 9) + 1;
+    let val2 = Math.floor(Math.random() * 9) + 1;
+    let sumResult = val1 + val2;
+    if (captchaLabel) captchaLabel.innerText = `${val1} + ${val2}`;
+
+    // Только цифры в телефоне
+    phoneField?.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^\d]/g, '');
     });
+
+    contactForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Проверка капчи
+        if (parseInt(captchaField.value) !== sumResult) {
+            alert('Неверный ответ на защитный вопрос!');
+            return;
+        }
+
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+        submitBtn.innerText = 'Интеграция данных...';
+        submitBtn.disabled = true;
+
+        // Имитация AJAX
+        setTimeout(() => {
+            gsap.to(contactForm.querySelectorAll('.form__group, .form__captcha, .form__consent, .btn--full'), {
+                opacity: 0,
+                y: -15,
+                stagger: 0.05,
+                duration: 0.4,
+                onComplete: () => {
+                    // Скрываем элементы и показываем Success
+                    contactForm.classList.add('form--sent');
+                    successBox.style.display = 'flex';
+                    gsap.fromTo(successBox, 
+                        { opacity: 0, scale: 0.9, y: 10 }, 
+                        { opacity: 1, scale: 1, y: 0, duration: 0.5 }
+                    );
+                }
+            });
+        }, 1400);
+    });
+
+
+    // --- 6. ДОПОЛНИТЕЛЬНЫЕ ИНТЕРАКТИВЫ ---
+
+    // Spotlight эффект на карточках преимуществ
+    document.querySelectorAll('.benefit-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const r = card.getBoundingClientRect();
+            card.style.setProperty('--mouse-x', `${e.clientX - r.left}px`);
+            card.style.setProperty('--mouse-y', `${e.clientY - r.top}px`);
+        });
+    });
+
+    // Горизонтальный скролл (Инновации)
+    const trackScroll = document.querySelector('.innovations__track');
+    if (trackScroll && window.innerWidth > 1024) {
+        gsap.to(trackScroll, {
+            x: () => -(trackScroll.scrollWidth - window.innerWidth + 100),
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".innovations",
+                start: "top top",
+                end: () => `+=${trackScroll.scrollWidth}`,
+                pin: true,
+                scrub: 1,
+                invalidateOnRefresh: true
+            }
+        });
+    }
+
+    // Парящее изображение в блоге
+    const blogFollow = document.querySelector('.blog-hover-img');
+    document.querySelectorAll('.blog-item').forEach(item => {
+        item.addEventListener('mouseenter', () => {
+            blogFollow.querySelector('img').src = item.dataset.img;
+            gsap.to(blogFollow, { opacity: 1, scale: 1, duration: 0.3 });
+        });
+        item.addEventListener('mouseleave', () => gsap.to(blogFollow, { opacity: 0, scale: 0.8 }));
+        item.addEventListener('mousemove', (e) => {
+            gsap.to(blogFollow, { x: e.clientX + 20, y: e.clientY - 100, duration: 0.5 });
+        });
+    });
+
+    // Система Cookie
+    const cookieUI = document.getElementById('cookie-popup');
+    if (!localStorage.getItem('alpha_policy_accepted')) {
+        setTimeout(() => cookieUI?.classList.add('cookie-popup--active'), 3000);
+    }
+    document.getElementById('cookie-accept')?.addEventListener('click', () => {
+        localStorage.setItem('alpha_policy_accepted', 'true');
+        cookieUI.classList.remove('cookie-popup--active');
+    });
+
+    console.log('Alpha Stream Core: System Active');
 });
